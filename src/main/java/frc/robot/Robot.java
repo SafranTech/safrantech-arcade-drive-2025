@@ -33,22 +33,29 @@ public class Robot extends TimedRobot {
 
     WPI_VictorSPX motor3 = new WPI_VictorSPX(12);
     WPI_VictorSPX motor5 = new WPI_VictorSPX(14);
-    
+
     private final DigitalInput limitSwitch = new DigitalInput(LIMIT_SWITCH_PIN);
     DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftmotor, m_rightmotor);
     private final Encoder encoder = new Encoder(ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
 
-    private boolean prevLimitSwitchState = false;
-
     boolean shooting_boost = false;
     double shooting_speed = 0.5;
-    double encoderMax = 500;
+    double encoderMax = 5000;
 
     @Override
     public void robotInit() {
         encoder.setDistancePerPulse(1);
         encoder.reset();
         m_leftmotor.setInverted(true);
+    }
+
+    public void stopMotors() {
+        m_leftmotor.stopMotor();
+        m_rightmotor.stopMotor();
+        shooting_m.stopMotor();
+        motor3.stopMotor();
+        motor5.stopMotor();
+        SmartDashboard.putString("Motor Durumu", "Kapalı");
     }
 
     public void joyst() {
@@ -81,8 +88,8 @@ public class Robot extends TimedRobot {
     }
 
     public void shooting() {
-        if(joystick.getRawButton(8)) {
-            if(shooting_boost) {
+        if (joystick.getRawButton(8)) {
+            if (shooting_boost) {
                 shooting_boost = false;
                 shooting_speed = 0.5;
             } else {
@@ -92,7 +99,6 @@ public class Robot extends TimedRobot {
         }
 
         if (joystick.getRawButton(4)) {
-            // m_rightmotor.set(0.4);
             m_shooting.set(0.2);
         } else {
             shooting_m.set(0);
@@ -117,38 +123,22 @@ public class Robot extends TimedRobot {
 
         boolean encoderLimit = encoderCount >= encoderMax;
 
-        // Durum değişikliği yakalamak için kontrol et
-        if (limitSwitchState != prevLimitSwitchState) {
-            System.out.println("Limit Switch State Changed: " + limitSwitchState);
-            prevLimitSwitchState = limitSwitchState;
-        }
-
-        // Durumu SmartDashboard'a yazdır
         SmartDashboard.putBoolean("Limit Switch:", limitSwitchState);
         SmartDashboard.putNumber("Encoder Distance", distance);
         SmartDashboard.putNumber("Encoder Count", encoderCount);
         SmartDashboard.putBoolean("Encoder Limit Reached", encoderLimit);
 
-        // Limit switch ve encoder limit durumlarını kontrol ederek motorları durdur
-        // if (limitSwitchState || encoderLimit) {
-        // motor1.set(0.0); // Motor 1 durdur
-        // motor2.set(0.0); // Motor 2 durdur
-        // System.out.println("Motors Stopped: " +
-        // (limitSwitchState ? "Limit Switch Pressed" : "Encoder Limit Reached"));
-        // } else {
-        matchtime();
-        matchnum();
-        joyst();
-        shooting();
+        if (limitSwitchState || encoderLimit) {
+            stopMotors();
+            System.out.println("Motorlar Durduruldu: " +
+                    (limitSwitchState ? "Limit Switch" : "Limit"));
+        } else {
+            SmartDashboard.putString("Motor Durumu", "Açık");
+            matchtime();
+            matchnum();
+            joyst();
+            shooting();
+        }
 
-        // if (joystick.getRawButton(1)) {
-        //     motor5.set(0.5);
-        // } else {
-        //     motor5.set(0);
-        // }
-        // if (joystick.getRawButton(4)) {
-        //     motor5.set(-0.5);
-        // }
-        // }
     }
 }
