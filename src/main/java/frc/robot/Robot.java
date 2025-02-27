@@ -17,9 +17,10 @@ import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 public class Robot extends TimedRobot {
 
-    private final int LIMIT_SWITCH_PIN = 1;
-    private final int ENCODER_CHANNEL_A = 2;
-    private final int ENCODER_CHANNEL_B = 3;
+    private final int lw_left_pin = 1;
+    private final int lw_right_pin = 2;
+    private final int ENCODER_CHANNEL_A = 3;
+    private final int ENCODER_CHANNEL_B = 4;
 
     // private final Spark m_shooting = new Spark(20);
     SparkMax m_shooting = new SparkMax(20, MotorType.kBrushless);
@@ -34,7 +35,8 @@ public class Robot extends TimedRobot {
     WPI_VictorSPX motor3 = new WPI_VictorSPX(12);
     WPI_VictorSPX motor5 = new WPI_VictorSPX(14);
 
-    private final DigitalInput limitSwitch = new DigitalInput(LIMIT_SWITCH_PIN);
+    private final DigitalInput lw_right = new DigitalInput(lw_right_pin);
+    private final DigitalInput lw_left = new DigitalInput(lw_left_pin);
     DifferentialDrive m_robotDrive = new DifferentialDrive(m_leftmotor, m_rightmotor);
     private final Encoder encoder = new Encoder(ENCODER_CHANNEL_A, ENCODER_CHANNEL_B);
 
@@ -52,6 +54,7 @@ public class Robot extends TimedRobot {
     public void stopMotors() {
         m_leftmotor.stopMotor();
         m_rightmotor.stopMotor();
+        m_robotDrive.stopMotor();
         shooting_m.stopMotor();
         motor3.stopMotor();
         motor5.stopMotor();
@@ -74,11 +77,14 @@ public class Robot extends TimedRobot {
 
     @Override
     public void testPeriodic() {
-        m_leftmotor.set(0.5);
-        m_rightmotor.set(-0.5);
-        motor3.set(0.5);
-        shooting_m.set(0.5);
-        motor5.set(0.5);
+        if(m_timer.get() < 5.0) {
+            m_robotDrive.arcadeDrive(0.3, 0.3);
+        } else if (m_timer.get() > 5.0 && m_timer.get() <= 15) {
+            shooting_m.set(0.8);
+            m_robotDrive.arcadeDrive(0.6, 0.6);
+        } else if (m_timer.get() > 15) {
+            stopMotors();
+        }
     }
 
     public void matchnum() {
@@ -116,22 +122,23 @@ public class Robot extends TimedRobot {
 
     @Override
     public void teleopPeriodic() {
-        boolean limitSwitchState = limitSwitch.get();
+        boolean lw_rightStatus = lw_right.get();
+        boolean lw_leftStatus = lw_left.get();
 
         int encoderCount = encoder.get(); // Encoder'den gelen pulse sayısı
         double distance = encoder.getDistance(); // Ölçülen mesafe
 
         boolean encoderLimit = encoderCount >= encoderMax;
 
-        SmartDashboard.putBoolean("Limit Switch:", limitSwitchState);
+        SmartDashboard.putBoolean("Limit Switch Right:", lw_rightStatus);
+        SmartDashboard.putBoolean("Limit Switch Left:", lw_leftStatus);
         SmartDashboard.putNumber("Encoder Distance", distance);
         SmartDashboard.putNumber("Encoder Count", encoderCount);
         SmartDashboard.putBoolean("Encoder Limit Reached", encoderLimit);
 
-        if (limitSwitchState || encoderLimit) {
+        if (lw_rightStatus || lw_leftStatus || encoderLimit) {
             stopMotors();
-            System.out.println("Motorlar Durduruldu: " +
-                    (limitSwitchState ? "Limit Switch" : "Limit"));
+            System.out.println("Motorlar Durduruldu: " + (lw_rightStatus || lw_leftStatus ? "Limit Switch" : "Encoder Limit"));
         } else {
             SmartDashboard.putString("Motor Durumu", "Açık");
             matchtime();
