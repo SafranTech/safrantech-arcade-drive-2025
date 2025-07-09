@@ -12,6 +12,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import edu.wpi.first.cameraserver.CameraServer;
 import edu.wpi.first.cscore.UsbCamera;
 import edu.wpi.first.cscore.MjpegServer;
+import edu.wpi.first.wpilibj.PS5Controller;
 // import edu.wpi.first.wpilibj.DigitalInput;
 // import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 // import edu.wpi.first.wpilibj.motorcontrol.Spark;
@@ -20,7 +21,8 @@ import edu.wpi.first.cscore.MjpegServer;
 public class Robot extends TimedRobot {
     Timer m_timer = new Timer();
 
-    private final Joystick joystick = new Joystick(0);
+    private final PS5Controller joystick = new PS5Controller(1);
+    // private final Joystick joystick2 = new Joystick(1);
     private UsbCamera usbCamera;
     private MjpegServer mjpegServer;
 
@@ -55,12 +57,20 @@ public class Robot extends TimedRobot {
         SmartDashboard.putBoolean("Motor Durumu", false);
     }
 
+    // public void joyst() {
+    //     double forward = +joystick.getRawAxis(4);
+    //     double turn = joystick.getRawAxis(1);
+    //     m_robotDrive.arcadeDrive((turn * 0.9), (forward * 0.9));
+    //     SmartDashboard.putNumber("Joystick X", joystick.getX());
+    //     SmartDashboard.putNumber("Joystick Y", joystick.getY());
+    // }
+
     public void joyst() {
         double forward = +joystick.getRawAxis(4);
         double turn = joystick.getRawAxis(1);
         m_robotDrive.arcadeDrive((turn * 0.9), (forward * 0.9));
-        SmartDashboard.putNumber("Joystick X", joystick.getX());
-        SmartDashboard.putNumber("Joystick Y", joystick.getY());
+        SmartDashboard.putNumber("Joystick X", joystick.getRightX());
+        SmartDashboard.putNumber("Joystick Y", joystick.getLeftY());
     }
 
     public void matchtime() {
